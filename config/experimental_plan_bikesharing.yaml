@@ -1,5 +1,5 @@
 name : FCST
-version: 2.1.0
+version: 2.1.1
 
 external_path:
     - load_train_data_path: solution/sample_data/train_input_path/
