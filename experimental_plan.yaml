@@ -1,0 +1,218 @@
+name : FCST
+version: 2.1.0
+
+external_path:
+    - load_train_data_path: solution/sample_data/train_input_path/
+    - load_inference_data_path: solution/sample_data/inference_input_path/
+    - save_train_artifacts_path:
+    - save_inference_artifacts_path:
+    - load_model_path: 
+
+
+external_path_permission:
+    - aws_key_profile:
+
+
+user_parameters:
+    - train_pipeline:
+        - step: input  
+          args:
+            - file_type: csv   # (str), csv(default) | parquet
+              encoding: utf-8  # (str), utf-8(default) | cp949
+
+        - step: readiness 
+          args:
+            - y_column: OT # (str)
+              time_column: date # (str)
+              time_format: "%Y-%m-%d %H:%M:%S" # (str), "%Y-%m-%d"(default)
+              sample_frequency: hourly # (str), daily(default) | yearly | monthly | weekly | hourly | minutely | secondly
+              input_chunk_length: 240 # (int)
+              forecast_periods: 120 # (int)
+              x_covariates: ['HUFL', 'HULL', 'MUFL', 'MULL', 'LUFL', 'LULL'] # (list)
+          ui_args:
+            - y_column
+            - time_column
+            - time_format
+            - sample_frequency
+            - input_chunk_length
+            - forecast_periods
+
+        - step: bizpreprocess 
+          args:
+
+        - step: train  
+          args:
+            - forecaster_name: nbeats # (str), nbeats(default)
+  
+          ui_args:
+            - forecaster_name
+
+    - inference_pipeline:
+        - step: input 
+          args:
+            - file_type: csv   # (str), csv(default) | parquet
+              encoding: utf-8  # (str), utf-8(default) | cp949
+
+        - step: readiness 
+          args:              
+
+        - step: bizpreprocess  
+          args:
+
+        - step: inference 
+          args:
+            
+## asset 의 설치 정보를 기록       
+asset_source:
+    - train_pipeline:
+        - step: input
+          source:  ## git / local 지원
+            code: http://mod.lge.com/hub/dxadvtech/assets/input.git
+            # code: local
+            branch: v1.0.0_tabular
+            requirements:
+        - step: readiness
+          source:  ## git / local 지원
+            code: http://mod.lge.com/hub/dxadvtech/assets/readiness.git
+            # code: local
+            branch: v1.0.0_fcst_dl
+            requirements:
+        - step: bizpreprocess
+          source:
+            code: http://mod.lge.com/hub/dxadvtech/assets/fcst_preprocess.git
+            # code: local
+            branch: v1.1.0
+            requirements:
+              - requirements.txt
+        - step: train
+          source:
+            code: http://mod.lge.com/hub/dxadvtech/assets/forecast.git
+            # code: local
+            branch: v2.1.0
+            requirements:
+              - requirements.txt
+
+
+    - inference_pipeline:
+        - step: input
+          source:  ## git / local 지원
+            code: http://mod.lge.com/hub/dxadvtech/assets/input.git
+            # code: local
+            branch: v1.0.0_tabular
+            requirements:
+        - step: readiness
+          source:  ## git / local 지원
+            code: http://mod.lge.com/hub/dxadvtech/assets/readiness.git
+            # code: local
+            branch: v1.0.0_fcst_dl
+            requirements: 
+        - step: bizpreprocess
+          source:
+            code: http://mod.lge.com/hub/dxadvtech/assets/fcst_preprocess.git
+            # code: local
+            branch: v1.1.0
+            requirements:
+        - step: inference
+          source:
+            code: http://mod.lge.com/hub/dxadvtech/assets/forecast.git
+            # code: local
+            branch: v2.1.0
+            requirements:
+
+
+control:
+  ## 1. 패키지 설치 및 asset 존재 여부를 실험 시마다 체크할지, 한번만 할지 결정
+  ## 1-2 requirements.txt 및 종속 패키지들 한번만 설치할 지 매번 설치할지도 결정 
+  - get_asset_source: every ## once, every
+  ## 2. 생성된 artifacts 를 backup 할지를 결정 True/False
+  - backup_artifacts: True
+  ## 3. pipeline 로그를 backup 할지를 결정 True/False
+  - backup_log: True
+  ## 4. 저장 공간 사이즈를 결정 (단위 MB)
+  - backup_size: 1000
+
+  ## 5. Asset 사이 데이터 전달 방법으로 memory, file 를 지원
+  - interface_mode: memory
+
+    # ## 1. 패키지 설치 및 asset 존재 여부를 실험 시마다 체크할지, 한번만 할지 결정
+    # - check_asset_source: once ## once, every
+    # ## 2. 생성된 artifacts 를 backup 할지를 결정 True/False
+    # - backup_artifacts: True
+    # ## 3. pipeline 로그를 backup 할지를 결정 True/False
+    # - backup_log: True
+    # ## 4. 저장 공간 사이즈를 결정 (단위 MB)
+    # - backup_size: 1000
+ 
+    # ## 5. Asset 사이 데이터 전달 방법으로 memory, file 를 지원
+    # - interface_mode: memory
+
+########
+ui_args_detail:
+    - train_pipeline:
+        - step: readiness
+          args:
+              - name: y_column
+                description: Forecasting에 사용될 y column 명을 입력합니다.
+                type: string
+                default: ''
+                range:
+                  - 1
+                  - 1000
+
+              - name: time_column
+                description: Forecasting에 사용될 time column 명을 입력합니다.
+                type: string
+                default: ''
+                range:
+                  - 1
+                  - 1000
+
+              - name: time_format
+                description: time column의 포맷을 입력합니다.
+                type: string
+                default: '%Y-%m-%d'
+                range:
+                  - 1
+                  - 1000
+
+              - name: sample_frequency
+                description: 모델의 Input 시계열 길이를 입력합니다.
+                type: single_selection
+                default: 'daily'
+                selectable:
+                  - yearly
+                  - monthly
+                  - weekly
+                  - daily
+                  - hourly
+                  - minutely
+                  - secondly
+
+              - name: input_chunk_length
+                description: 모델의 Input 시계열 길이를 입력합니다.
+                type: int
+                default: 6
+                range:
+                  - 1
+                  - 1000
+            
+              - name: forecast_periods
+                description: 모델의 예측 시계열 길이를 입력합니다.
+                type: int
+                default: 3
+                range:
+                  - 1
+                  - 1000
+                              
+
+        - step: train
+          args:
+              - name: forecaster_name
+                description: 학습 모델을 선택합니다.
+                type: single_selection
+                default: nbeats
+                selectable:
+                  - nbeats
+                  - nhits
+                  - tft
+
