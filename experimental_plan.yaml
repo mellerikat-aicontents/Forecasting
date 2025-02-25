@@ -1,5 +1,5 @@
 name : FCST
-version: 2.1.0
+version: 2.1.1
 
 external_path:
     - load_train_data_path: solution/sample_data/train_input_path/
@@ -81,7 +81,7 @@ asset_source:
           source:
             code: https://github.com/mellerikat-aicontents/fcst_preprocess.git
             # code: local
-            branch: v1.1.0
+            branch: v1.1.1
             requirements:
               - requirements.txt
         - step: train
@@ -110,7 +110,7 @@ asset_source:
           source:
             code: https://github.com/mellerikat-aicontents/fcst_preprocess.git
             # code: local
-            branch: v1.1.0
+            branch: v1.1.1
             requirements:
         - step: inference
           source:
